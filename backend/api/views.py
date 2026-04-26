@@ -2,7 +2,8 @@ import os
 import subprocess
 
 from django.contrib.auth.models import User
-
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -287,3 +288,85 @@ def add_member(request, project_id):
     return Response({
         'status': 'added'
     })
+# -----------------------------
+# Signup
+# -----------------------------
+@api_view(['GET', 'POST'])
+def signup(request):
+
+    # GET request
+    if request.method == 'GET':
+
+        return Response({
+            'message': 'Signup endpoint ready'
+        })
+
+    # POST request
+    username = request.data.get('username')
+
+    email = request.data.get('email')
+
+    password = request.data.get('password')
+
+    # Validate
+    if not username or not password:
+
+        return Response(
+            {'error': 'Username and password required'},
+            status=400
+        )
+
+    # Existing user check
+    if User.objects.filter(username=username).exists():
+
+        return Response(
+            {'error': 'Username already exists'},
+            status=400
+        )
+
+    # Create user
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password
+    )
+
+    return Response({
+        'message': 'User created successfully',
+        'user_id': user.id
+    })
+# -----------------------------
+# Login
+# -----------------------------
+@api_view(['GET', 'POST'])
+def login(request):
+
+    # GET request
+    if request.method == 'GET':
+
+        return Response({
+            'message': 'Login endpoint ready'
+        })
+
+    # POST request
+    username = request.data.get('username')
+
+    password = request.data.get('password')
+
+    user = authenticate(
+        username=username,
+        password=password
+    )
+
+    if user is not None:
+
+        return Response({
+            'message': 'Login successful',
+            'user_id': user.id,
+            'username': user.username
+        })
+
+    return Response(
+        {'error': 'Invalid credentials'},
+        status=400
+    )
